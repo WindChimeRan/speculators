@@ -1,20 +1,19 @@
-"""Configuration registries for data generation pipeline."""
+"""Source-dataset configurations for target-model response generation."""
 
 import os
 from collections.abc import Callable
 from dataclasses import dataclass
 
 __all__ = [
-    "DATASET_CONFIGS",
-    "DatasetConfig",
+    "SOURCE_DATASET_CONFIGS",
+    "SourceDatasetConfig",
 ]
 
 
 @dataclass(kw_only=True)
-class DatasetConfig:
-    """Configuration for loading a dataset"""
+class SourceDatasetConfig:
+    """A raw prompt dataset used to generate on-policy target responses."""
 
-    name: str
     hf_path: str
     subset: str | None = None
     split: str
@@ -103,57 +102,49 @@ def _normalize_sharegpt4v_coco(example: dict) -> dict:
     return {"conversations": messages}
 
 
-DATASET_CONFIGS: dict[str, DatasetConfig] = {
-    "sharegpt": DatasetConfig(
-        name="sharegpt",
+SOURCE_DATASET_CONFIGS: dict[str, SourceDatasetConfig] = {
+    "sharegpt": SourceDatasetConfig(
         hf_path="Aeala/ShareGPT_Vicuna_unfiltered",
         split="train",
     ),
-    "ultrachat": DatasetConfig(
-        name="ultrachat",
+    "ultrachat": SourceDatasetConfig(
         hf_path="HuggingFaceH4/ultrachat_200k",
         split="train_sft",
         normalize_fn=_normalize_ultrachat,
         prompt_field="prompt",
     ),
-    "gsm8k": DatasetConfig(
-        name="gsm8k",
+    "gsm8k": SourceDatasetConfig(
         hf_path="openai/gsm8k",
         subset="main",
         split="train",
         normalize_fn=_normalize_gsm8k,
         prompt_field="question",
     ),
-    "magpie": DatasetConfig(
-        name="magpie",
+    "magpie": SourceDatasetConfig(
         hf_path="Magpie-Align/Magpie-Llama-3.1-Pro-300K-Filtered",
         split="train",
         prompt_field="instruction",
     ),
-    "nemotron": DatasetConfig(
-        name="nemotron",
+    "nemotron": SourceDatasetConfig(
         hf_path="nvidia/Llama-Nemotron-Post-Training-Dataset",
         subset="SFT",
         split="chat",
         normalize_fn=_normalize_nemotron,
     ),
     # NOTE: You need to serve vLLM with `--allowed-local-media-path /path/to/coco`
-    "sharegpt4v_coco": DatasetConfig(
-        name="sharegpt4v_coco",
+    "sharegpt4v_coco": SourceDatasetConfig(
         hf_path="Lin-Chen/ShareGPT4V",
         subset="ShareGPT4V",
         split="train",
         filter_fn=_filter_sharegpt4v_coco,
         normalize_fn=_normalize_sharegpt4v_coco,
     ),
-    "open-perfectblend": DatasetConfig(
-        name="open-perfectblend",
+    "open-perfectblend": SourceDatasetConfig(
         hf_path="mlabonne/open-perfectblend",
         split="train",
     ),
     # Multi-turn function-calling SFT
-    "hermes-fc": DatasetConfig(
-        name="hermes-fc",
+    "hermes-fc": SourceDatasetConfig(
         hf_path="NousResearch/hermes-function-calling-v1",
         subset="func_calling",
         split="train",

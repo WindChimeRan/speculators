@@ -11,7 +11,7 @@ from datasets import Dataset as HFDataset
 from PIL import Image
 
 from speculators.data_generation.configs import (
-    DATASET_CONFIGS,
+    SOURCE_DATASET_CONFIGS,
     _normalize_nemotron,
 )
 from speculators.data_generation.preprocessing import (
@@ -340,13 +340,13 @@ def test_load_raw_dataset_empty_directory_raises(tmp_path):
 
 
 @pytest.mark.sanity
-def test_load_raw_dataset_named_preset():
-    """A named preset resolves through DATASET_CONFIGS to load_dataset."""
+def test_load_raw_dataset_named_source_preset():
+    """A named source preset resolves through SOURCE_DATASET_CONFIGS."""
     sentinel = HFDataset.from_list([_conv_row("x")])
     with patch(f"{PREFIX}.load_dataset", return_value=sentinel) as mock_load:
         dataset, normalize_fn = load_raw_dataset("sharegpt")
 
-    config = DATASET_CONFIGS["sharegpt"]
+    config = SOURCE_DATASET_CONFIGS["sharegpt"]
     mock_load.assert_called_once_with(
         config.hf_path, name=config.subset, split=config.split
     )
@@ -439,12 +439,12 @@ def test_load_hf_dataset_malformed_spec_raises(spec):
 
 
 @pytest.mark.sanity
-def test_dataset_configs_has_magpie_and_nemotron():
-    """magpie and nemotron presets are registered."""
-    assert "magpie" in DATASET_CONFIGS
-    assert "nemotron" in DATASET_CONFIGS
+def test_source_dataset_configs_has_magpie_and_nemotron():
+    """magpie and nemotron source presets are registered."""
+    assert "magpie" in SOURCE_DATASET_CONFIGS
+    assert "nemotron" in SOURCE_DATASET_CONFIGS
     # magpie ships conversations already, so needs no normalize_fn.
-    assert DATASET_CONFIGS["magpie"].normalize_fn is None
+    assert SOURCE_DATASET_CONFIGS["magpie"].normalize_fn is None
 
 
 @pytest.mark.sanity

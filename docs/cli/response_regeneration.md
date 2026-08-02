@@ -124,7 +124,9 @@ python scripts/response_regeneration/script.py \
 
 ## Supported Datasets
 
-The text presets from the shared dataset registry (`DATASET_CONFIGS` in `speculators/data_generation/configs.py`) — the same ones `prepare-data` accepts:
+The text presets from the source-dataset registry
+(`SOURCE_DATASET_CONFIGS` in `speculators/data_generation/configs.py`) — the
+same ones `prepare-data` currently accepts:
 
 | Dataset             | HuggingFace ID                                    | Default Split |
 | ------------------- | ------------------------------------------------- | ------------- |

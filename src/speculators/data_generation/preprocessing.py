@@ -13,7 +13,7 @@ from transformers import (
     ProcessorMixin,
 )
 
-from speculators.data_generation.configs import DATASET_CONFIGS
+from speculators.data_generation.configs import SOURCE_DATASET_CONFIGS
 from speculators.data_generation.logging_utils import PipelineLogger
 from speculators.data_generation.render_client import render_conversation
 from speculators.data_generation.torch_utils import set_default_torch_num_threads
@@ -595,7 +595,8 @@ def _load_hf_dataset(spec: str) -> tuple[HFDataset, None]:
             f"HuggingFace dataset '{hf_id}' (split '{split}') is not in "
             f"conversations format: expected a 'conversations' column but found "
             f"{raw_dataset.column_names}. Pass a dataset already in conversations "
-            f"format, or add a preset to DATASET_CONFIGS with a normalize_fn."
+            f"format, or add a source preset to SOURCE_DATASET_CONFIGS with a "
+            f"normalize_fn."
         )
 
     return raw_dataset, None
@@ -610,7 +611,7 @@ def load_raw_dataset(
         1. Local ``.json``/``.jsonl`` file.
         2. Local directory: recursively load all ``*.json``/``*.jsonl`` files
            as a single dataset.
-        3. Named preset from ``DATASET_CONFIGS``.
+        3. Named source preset from ``SOURCE_DATASET_CONFIGS``.
         4. ``hf:<id>[:<subset>:<split>]`` for an arbitrary HuggingFace dataset.
 
     Args:
@@ -641,8 +642,8 @@ def load_raw_dataset(
         return load_dataset("json", data_files=data_files, split="train"), None
 
     # 3. Named preset
-    if train_data_path in DATASET_CONFIGS:
-        config = DATASET_CONFIGS[train_data_path]
+    if train_data_path in SOURCE_DATASET_CONFIGS:
+        config = SOURCE_DATASET_CONFIGS[train_data_path]
         raw_dataset = load_dataset(
             config.hf_path, name=config.subset, split=config.split
         )
@@ -657,7 +658,7 @@ def load_raw_dataset(
     raise ValueError(
         f"Unsupported dataset: {train_data_path}. Supported: local .json/.jsonl "
         f"file, local directory of .json/.jsonl files, hf:<id>[:<subset>:<split>], "
-        f"or a preset {list(DATASET_CONFIGS.keys())}."
+        f"or a source preset {list(SOURCE_DATASET_CONFIGS.keys())}."
     )
 
 

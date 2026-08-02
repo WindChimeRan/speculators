@@ -17,7 +17,10 @@ from datasets import load_dataset
 from tqdm import tqdm
 from transformers import AutoTokenizer
 
-from speculators.data_generation.configs import DATASET_CONFIGS, DatasetConfig
+from speculators.data_generation.configs import (
+    SOURCE_DATASET_CONFIGS,
+    SourceDatasetConfig,
+)
 from speculators.data_generation.vllm_client import (
     DEFAULT_MAX_RETRIES,
     InvalidResponseError,
@@ -30,7 +33,9 @@ logger = logging.getLogger(__name__)
 # multimodal target responses externally and then convert those conversations
 # with `prepare_data.py`.
 MULTIMODAL_DATASETS = {"sharegpt4v_coco"}
-REGEN_DATASETS = [name for name in DATASET_CONFIGS if name not in MULTIMODAL_DATASETS]
+REGEN_DATASETS = [
+    name for name in SOURCE_DATASET_CONFIGS if name not in MULTIMODAL_DATASETS
+]
 
 
 def _dataset_choice(name: str) -> str:
@@ -224,7 +229,7 @@ def extract_conversation(
 
 
 def prepare_row(
-    row: dict[str, Any], config: DatasetConfig
+    row: dict[str, Any], config: SourceDatasetConfig
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[tuple[Any, list[str]]]] | None:
     """The normalized row, its regeneration turns, and cached tool results.
 
@@ -766,7 +771,7 @@ async def main():
     detokenize = build_detokenizer(args.model)
 
     # Get dataset configuration
-    dataset_config = DATASET_CONFIGS[args.dataset]
+    dataset_config = SOURCE_DATASET_CONFIGS[args.dataset]
     dataset_id = dataset_config.hf_path
 
     # Use dataset-specific defaults if not provided

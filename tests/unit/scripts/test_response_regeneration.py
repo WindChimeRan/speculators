@@ -19,7 +19,10 @@ from typing import Any
 import pytest
 
 from speculators.data_generation import vllm_client
-from speculators.data_generation.configs import DATASET_CONFIGS, DatasetConfig
+from speculators.data_generation.configs import (
+    SOURCE_DATASET_CONFIGS,
+    SourceDatasetConfig,
+)
 from speculators.data_generation.preprocessing import _preprocess_batch
 from speculators.data_generation.vllm_client import InvalidResponseError
 
@@ -864,13 +867,12 @@ def test_prepare_row_uses_shared_normalization():
         "input": [{"role": "user", "content": "Hi"}],
         "output": "<original answer to drop>",
     }
-    _, turns, _ = regen.prepare_row(row, DATASET_CONFIGS["nemotron"])
+    _, turns, _ = regen.prepare_row(row, SOURCE_DATASET_CONFIGS["nemotron"])
     assert turns == [{"role": "user", "content": "Hi"}]
 
 
 def test_prepare_row_applies_filter_fn():
-    config = DatasetConfig(
-        name="t",
+    config = SourceDatasetConfig(
         hf_path="t",
         split="train",
         filter_fn=lambda row: row["keep"],
@@ -883,8 +885,7 @@ def test_prepare_row_applies_filter_fn():
 
 def test_prepare_row_merges_normalize_output_over_raw_row():
     # HF map merges columns: normalize output must not clobber the raw fallback.
-    config = DatasetConfig(
-        name="t",
+    config = SourceDatasetConfig(
         hf_path="t",
         split="train",
         normalize_fn=lambda row: {"conversations": []},
@@ -903,8 +904,7 @@ def test_dataset_choice_rejects_multimodal_with_a_reason():
 def test_tools_and_results_are_read_from_the_normalized_row():
     # Under a normalize_fn preset the conversation only appears in `messages`
     # after normalization; reading tools off the raw row regenerates tool-free.
-    config = DatasetConfig(
-        name="toolcalls",
+    config = SourceDatasetConfig(
         hf_path="t",
         split="train",
         normalize_fn=lambda row: {"messages": row["input"]},
