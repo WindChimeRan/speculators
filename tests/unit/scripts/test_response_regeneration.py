@@ -189,7 +189,7 @@ def test_extract_conversation_no_usable_input_returns_empty():
 
 
 # ---------------------------------------------------------------------------
-# 2. The generation boundary is the loss mask; pre-tokenized rows pass through.
+# 2. The generation boundary is the loss mask; speculator-format rows pass through.
 # ---------------------------------------------------------------------------
 
 
@@ -199,7 +199,7 @@ def test_build_boundary_sample_is_the_mask():
     assert loss_mask == [0, 0, 0, 0, 1, 1, 1]
 
 
-def test_pretokenized_rows_pass_through_preprocessing():
+def test_speculator_formatted_rows_pass_through_preprocessing():
     # A regen row reaches training already masked: no processor, no re-masking,
     # and the review-only `conversations` field is dropped.
     input_ids, loss_mask = regen.build_boundary_sample([10, 11, 12], [20, 21])
@@ -218,7 +218,7 @@ def test_pretokenized_rows_pass_through_preprocessing():
     assert "conversations" not in out
 
 
-def test_pretokenized_passthrough_truncates_and_filters():
+def test_speculator_formatted_passthrough_truncates_and_filters():
     # Truncation can cut the completion span away (all-zero mask); such a row must
     # be dropped by minimum_valid_tokens, like the tokenized path.
     kept = regen.build_boundary_sample([1, 2], [3, 4])  # fits max_length=4
@@ -234,7 +234,7 @@ def test_pretokenized_passthrough_truncates_and_filters():
     assert [m.tolist() for m in out["loss_mask"]] == [[0, 0, 1, 1]]
 
 
-def test_pretokenized_passthrough_rejects_length_mismatch():
+def test_speculator_formatted_passthrough_rejects_length_mismatch():
     # The passthrough accepts rows from any dataset carrying both columns. A row
     # whose mask is shorter than its ids must fail loudly here: the collator packs
     # each key independently, so it would otherwise shift the mask silently.
@@ -854,11 +854,11 @@ def test_regenerate_truncates_on_tool_name_mismatch():
 
 
 # ---------------------------------------------------------------------------
-# 6. Every shared-registry preset works on-policy (off-policy parity).
+# 6. Every text-only shared-registry preset works in on-policy regeneration.
 # ---------------------------------------------------------------------------
 
 
-def test_prepare_row_normalizes_like_off_policy():
+def test_prepare_row_uses_shared_normalization():
     # nemotron rows only become extractable through the preset's normalize_fn.
     row = {
         "input": [{"role": "user", "content": "Hi"}],

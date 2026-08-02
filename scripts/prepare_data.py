@@ -2,10 +2,16 @@
 """
 Prepare data for speculator training
 
-This script processes an input dataset and:
-1. Applies chat template + tokenizes each sample
-2. Produces a loss/assistant mask for each sample
+Accepted inputs contain responses produced by the target model, either as
+natural-language conversations or as speculator-format ``input_ids`` and
+``loss_mask`` rows. For natural-language input this script:
+
+1. Renders each conversation with the target model's vLLM endpoint
+2. Tokenizes it and derives a loss mask from each assistant-turn boundary
 3. Records token frequency statistics
+
+The render endpoint converts existing on-policy responses. It does not generate
+responses or turn an arbitrary dataset into on-policy training data.
 
 The output of this script is:
 1. Processed dataset ready for online training or offline datagen in output_dir
@@ -17,7 +23,8 @@ Token frequencies are saved in the output directory by default.
 Usage:
     python prepare_data.py \
         --model meta-llama/Llama-3.1-8B-Instruct \
-        --data sharegpt \
+        --data ./on_policy_conversations.jsonl \
+        --render-endpoint http://localhost:8000 \
         --output ./training_data \
         --max-samples 5000
 """
@@ -101,7 +108,11 @@ def parse_args():
         type=str,
         action="append",
         required=True,
-        help="Path to training data (same as used in preprocessing)",
+        help=(
+            "On-policy training data as natural-language conversations or "
+            "speculator-format input_ids/loss_mask rows. Assistant responses "
+            "must come from the target model; this command does not generate them."
+        ),
     )
     parser.add_argument(
         "--seq-length",
@@ -135,8 +146,9 @@ def parse_args():
             "/v1/chat/completions/render is appended to it, so the "
             "/v1-suffixed form that data_generation_offline.py --endpoint "
             "takes will 404. Conversations are tokenized by that endpoint and "
-            "the loss mask is derived from the render boundary. Required "
-            "unless every --data input is already pre-tokenized."
+            "the loss mask is derived from the render boundary. Rendering does "
+            "not generate responses or make arbitrary data on-policy. Required "
+            "unless every --data input already contains input_ids and loss_mask."
         ),
     )
 
